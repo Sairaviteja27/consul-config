@@ -1,0 +1,7 @@
+
+
+kubeadm token create --print-join-command
+
+
+
+--ignore-preflight-errors=Swap,FileAvailable--etc-kubernetes-kubelet.conf,Port-10250,SystemVerification

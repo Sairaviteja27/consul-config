@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: Service
+metadata:
+  # This name will be the service name in Consul.
+  name: backend
+  namespace: objs-fed
+  annotations:
+    consul.hashicorp.com/service-sync: "true"
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 7000
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend
+  namespace: objs-fed
+  
+---
+
+
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: backend
+spec:
+  protocol: http
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: objs-fed
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+        consul.hashicorp.com/service-meta-version: "dc1"
+    spec:
+      serviceAccountName: backend
+      containers:
+        - name: backend
+          image: raviteja2711/birdwatcher:1.0.1
+          env:
+            - name: BIND_ADDR
+              value: "0.0.0.0:7000"
+          ports:
+            - containerPort: 7000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+        - name: health-controller
+          image: python:3.9
+          ports:
+            - containerPort: 8081
+          command: ["python3", "-u", "-c"]
+          args:
+            - |
+              from http.server import BaseHTTPRequestHandler, HTTPServer
+              import threading
+
+              status = {"healthy": True}
+
+              class Handler(BaseHTTPRequestHandler):
+                  def do_GET(self):
+                      if self.path == "/health":
+                          self.send_response(200 if status["healthy"] else 500)
+                          self.end_headers()
+                          self.wfile.write(b"OK" if status["healthy"] else b"Not Ready")
+                      elif self.path == "/fail":
+                          status["healthy"] = False
+                          self.send_response(200)
+                          self.end_headers()
+                          self.wfile.write(b"Marked unhealthy")
+                      elif self.path == "/ok":
+                          status["healthy"] = True
+                          self.send_response(200)
+                          self.end_headers()
+                          self.wfile.write(b"Marked healthy")
+                      else:
+                          self.send_response(404)
+                          self.end_headers()
+
+              HTTPServer(("0.0.0.0", 8081), Handler).serve_forever()
+

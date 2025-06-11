@@ -1,0 +1,161 @@
+
+global:
+  name: consul
+  datacenter: dc1
+  loglevel: "debug"
+
+  # Configures metrics for Consul service mesh
+  metrics:
+    # Configures the Helm chart’s components
+    # to expose Prometheus metrics for the Consul service mesh. By default
+    # this includes gateway metrics and sidecar metrics.
+    # @type: boolean
+    enabled: true
+
+    # Configures consul agent metrics. Only applicable if
+    # `global.metrics.enabled` is true.
+    # @type: boolean
+    enableAgentMetrics: true
+
+    # Configures the retention time for metrics in Consul clients and
+    # servers. This must be greater than 0 for Consul clients and servers
+    # to expose any metrics at all.
+    # Only applicable if `global.metrics.enabled` is true.
+    # @type: string
+    agentMetricsRetentionTime: 1m
+
+    # If true, mesh, terminating, and ingress gateways will expose their
+    # Envoy metrics on port `20200` at the `/metrics` path and all gateway pods
+    # will have Prometheus scrape annotations. Only applicable if `global.metrics.enabled` is true.
+    # @type: boolean
+    enableGatewayMetrics: true
+
+  # TLS configures whether Consul components use TLS.
+  tls:
+    # TLS must be enabled for federation in Kubernetes.
+    enabled: true
+
+  federation:
+    enabled: true
+    # This will cause a Kubernetes secret to be created that
+    # can be imported by secondary datacenters to configure them
+    # for federation.
+    createFederationSecret: true
+  acls:
+    manageSystemACLs: false
+    # If ACLs are enabled, we must create a token for secondary
+    # datacenters to replicate ACLs.
+    createReplicationToken: false
+  connect:
+    enabled: true
+    enableMeshGatewayWANFederation: true  
+
+  # Gossip encryption secures the protocol Consul uses to quickly
+  # discover new nodes and detect failure.
+  # gossipEncryption:
+  #  autoGenerate: true
+
+controller:
+  enabled: true
+
+server:
+  enabled: true
+  replicas: 1
+  bootstrapExpect: 1
+  nodeSelector: |
+    kubernetes.io/hostname: c1-worker
+  exposeService:
+    enabled: true
+    type: NodePort
+    nodePort:
+      serf: 31302
+  extraConfig: |
+    {
+      "advertise_addr_wan": "192.168.10.209"
+    }
+
+client:
+  enabled: true
+  replicas: 1
+  nodeSelector: |
+    kubernetes.io/hostname: c1-worker2
+
+# Install Prometheus, a metrics database.
+prometheus:
+ enabled: true
+
+connectInject:
+  # Consul Connect service mesh must be enabled for federation.
+  enabled: true
+  apiGateway:
+    enabled: true
+    # Enables Consul on Kubernetes to manage the CRDs used for Gateway API.
+    # Setting this to true will install the CRDs used for the Gateway API when Consul on Kubernetes is installed.
+    # These CRDs can clash with existing Gateway API CRDs if they are already installed in your cluster.
+    # If this setting is false, you will need to install the Gateway API CRDs manually.
+    manageExternalCRDs: true
+
+    # Enables Consul on Kubernets to manage only the non-standard CRDs used for Gateway API. If manageExternalCRDs is true
+    # then all CRDs will be installed; otherwise, if manageNonStandardCRDs is true then only TCPRoute, GatewayClassConfig and MeshService
+    # will be installed.
+    manageNonStandardCRDs: true
+    managedGatewayClass:
+      serviceType: NodePort
+      metrics:
+        enabled: true
+    sidecarProxy: 
+      defaultStartupFailureSeconds: 60
+
+meshGateway:
+  # Mesh gateways are gateways between datacenters. They must be enabled
+  # for federation in Kubernetes since the communication between datacenters
+  # goes through the mesh gateways.
+  enabled: true
+  replicas: 1
+  # The service option configures the Service that fronts the Gateway Deployment.
+  service:
+    # Whether to create a Service or not.
+    enabled: true
+
+    # Type of service, ex. LoadBalancer, ClusterIP.
+    type: NodePort
+
+    # Port that the service will be exposed on.
+    # The targetPort will be set to meshGateway.containerPort.
+    port: 443
+    nodePort: 30080
+  nodeSelector: |
+    kubernetes.io/hostname: c1-worker
+  wanAddress:
+    port: 30080
+    source: Static
+    static: 192.168.10.209
+
+# Values that configure the Consul UI.
+ui:
+  # If true, the UI will be enabled. This will
+  # only _enable_ the UI, it doesn't automatically register any service for external
+  # access. The UI will only be enabled on server agents. If `server.enabled` is
+  # false, then this setting has no effect. To expose the UI in some way, you must
+  # configure `ui.service`.
+  # @default: global.enabled
+  # @type: boolean
+  enabled: true
+
+  # Configure the service for the Consul UI.
+  service:
+    # This will enable/disable registering a
+    # Kubernetes Service for the Consul UI. This value only takes effect if `ui.enabled` is
+    # true and taking effect.
+    enabled: true
+
+    # The service type to register.
+    # @type: string
+    type: NodePort
+       
+    nodePort:
+
+      # HTTP node port
+      # @type: integer
+      http: 32727
+      https: 32728

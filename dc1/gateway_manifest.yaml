@@ -1,0 +1,256 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "5"
+  creationTimestamp: "2025-03-03T23:42:18Z"
+  generation: 5
+  labels:
+    component: api-gateway
+    gateway.consul.hashicorp.com/created: "1740834356"
+    gateway.consul.hashicorp.com/managed: "true"
+    gateway.consul.hashicorp.com/name: my-gateway
+    gateway.consul.hashicorp.com/namespace: consul
+  name: my-gateway
+  namespace: consul
+  ownerReferences:
+  - apiVersion: gateway.networking.k8s.io/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Gateway
+    name: my-gateway
+    uid: eeffc5e2-f3d4-454b-863b-fbe4c02ff77d
+  resourceVersion: "1451891"
+  uid: 5f3a4fb7-76e6-4772-b22c-f41f4975f991
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      component: api-gateway
+      gateway.consul.hashicorp.com/created: "1740834356"
+      gateway.consul.hashicorp.com/managed: "true"
+      gateway.consul.hashicorp.com/name: my-gateway
+      gateway.consul.hashicorp.com/namespace: consul
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        consul.hashicorp.com/connect-inject: "false"
+        consul.hashicorp.com/gateway-consul-service-name: my-gateway
+        consul.hashicorp.com/gateway-kind: api-gateway
+        prometheus.io/path: /metrics
+        prometheus.io/port: "20200"
+        prometheus.io/scrape: "true"
+      creationTimestamp: null
+      labels:
+        component: api-gateway
+        gateway.consul.hashicorp.com/created: "1740834356"
+        gateway.consul.hashicorp.com/managed: "true"
+        gateway.consul.hashicorp.com/name: my-gateway
+        gateway.consul.hashicorp.com/namespace: consul
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  component: api-gateway
+                  gateway.consul.hashicorp.com/created: "1740834356"
+                  gateway.consul.hashicorp.com/managed: "true"
+                  gateway.consul.hashicorp.com/name: my-gateway
+                  gateway.consul.hashicorp.com/namespace: consul
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      containers:
+      - args:
+        - -addresses
+        - consul-server.consul.svc
+        - -grpc-port=8502
+        - -proxy-service-id-path=/consul/connect-inject/proxyid
+        - -log-level=info
+        - -log-json=false
+        - -envoy-concurrency=1
+        - -ca-certs=/consul/connect-inject/consul-ca.pem
+        - -envoy-ready-bind-port=21000
+        - -envoy-admin-bind-port=19000
+        - -telemetry-prom-scrape-path=/metrics
+        env:
+        - name: TMPDIR
+          value: /consul/connect-inject
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: DP_SERVICE_NODE_NAME
+          value: $(NODE_NAME)-virtual
+        - name: DP_ENVOY_READY_BIND_ADDRESS
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        image: hashicorp/consul-dataplane:1.6.2
+        imagePullPolicy: IfNotPresent
+        name: my-gateway
+        ports:
+        - containerPort: 21000
+          name: proxy-health
+          protocol: TCP
+        - containerPort: 20200
+          name: prometheus
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /ready
+            port: 21000
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        securityContext:
+          capabilities:
+            add:
+            - NET_BIND_SERVICE
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsUser: 0
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /consul/connect-inject
+          name: consul-connect-inject-data
+        - mountPath: /consul/gateway-certificates
+          name: consul-gateway-tls-certificates
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - /bin/sh
+        - -ec
+        - "consul-k8s-control-plane connect-init -pod-name=${POD_NAME} -pod-namespace=${POD_NAMESPACE}
+          \\\n\t-gateway-kind=\"api-gateway\" \\\n  -log-json=false \\\n  -service-name=\"my-gateway\""
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: CONSUL_ADDRESSES
+          value: consul-server.consul.svc
+        - name: CONSUL_GRPC_PORT
+          value: "8502"
+        - name: CONSUL_HTTP_PORT
+          value: "8501"
+        - name: CONSUL_API_TIMEOUT
+          value: 5s
+        - name: CONSUL_NODE_NAME
+          value: $(NODE_NAME)-virtual
+        - name: CONSUL_USE_TLS
+          value: "true"
+        - name: CONSUL_CACERT_PEM
+          value: |
+            -----BEGIN CERTIFICATE-----
+            MIIDQjCCAuigAwIBAgIUHbAJjgj/vKchp6o/oPhY3mI7RngwCgYIKoZIzj0EAwIw
+            gZExCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNU2FuIEZyYW5j
+            aXNjbzEaMBgGA1UECRMRMTAxIFNlY29uZCBTdHJlZXQxDjAMBgNVBBETBTk0MTA1
+            MRcwFQYDVQQKEw5IYXNoaUNvcnAgSW5jLjEYMBYGA1UEAxMPQ29uc3VsIEFnZW50
+            IENBMB4XDTI1MDMwMTEyNDM1NloXDTM1MDIyNzEyNDQ1NlowgZExCzAJBgNVBAYT
+            AlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEaMBgGA1UE
+            CRMRMTAxIFNlY29uZCBTdHJlZXQxDjAMBgNVBBETBTk0MTA1MRcwFQYDVQQKEw5I
+            YXNoaUNvcnAgSW5jLjEYMBYGA1UEAxMPQ29uc3VsIEFnZW50IENBMFkwEwYHKoZI
+            zj0CAQYIKoZIzj0DAQcDQgAEQ0F4PKeOfNEOTIaqEwEt5TaSC8NeeQMRSFiHTz3q
+            4No6vJ3Lpr7WUL5Q+uBL1BAWn9e/AZfgMKzqHDY4OopEOaOCARowggEWMA4GA1Ud
+            DwEB/wQEAwIBhjAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDwYDVR0T
+            AQH/BAUwAwEB/zBoBgNVHQ4EYQRfMWE6NmI6NjY6ZWU6YjU6NjU6ZGY6ZGY6ZTA6
+            ZTg6Mzg6NmM6ZjU6Mzg6YTk6YzA6N2E6YzU6ZGI6YTg6MzM6NTA6Zjk6ZDI6Njk6
+            NTQ6ZDc6ODA6YzE6NDE6MDk6MGMwagYDVR0jBGMwYYBfMWE6NmI6NjY6ZWU6YjU6
+            NjU6ZGY6ZGY6ZTA6ZTg6Mzg6NmM6ZjU6Mzg6YTk6YzA6N2E6YzU6ZGI6YTg6MzM6
+            NTA6Zjk6ZDI6Njk6NTQ6ZDc6ODA6YzE6NDE6MDk6MGMwCgYIKoZIzj0EAwIDSAAw
+            RQIgfZhksRhgjABK7yiYlTBhGIBdPOP+UExgk4YzKFraV6MCIQC3PCEOdpT4dTv7
+            mHA8pDGMTuoPvras3lfvJjkrrg9R5Q==
+            -----END CERTIFICATE-----
+        - name: CONSUL_TLS_SERVER_NAME
+        - name: CONSUL_NAMESPACE
+        image: hashicorp/consul-k8s-control-plane:1.6.2
+        imagePullPolicy: IfNotPresent
+        name: consul-connect-inject-init
+        resources:
+          limits:
+            cpu: 50m
+            memory: 150Mi
+          requests:
+            cpu: 50m
+            memory: 25Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 5996
+          runAsNonRoot: true
+          runAsUser: 5996
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /consul/connect-inject
+          name: consul-connect-inject-data
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir:
+          medium: Memory
+        name: consul-connect-inject-data
+      - name: consul-gateway-tls-certificates
+        secret:
+          defaultMode: 444
+          optional: false
+          secretName: my-gateway
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2025-03-04T01:25:37Z"
+    lastUpdateTime: "2025-03-04T01:25:37Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-03-03T23:42:19Z"
+    lastUpdateTime: "2025-03-04T01:43:31Z"
+    message: ReplicaSet "my-gateway-567dd669df" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 5
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

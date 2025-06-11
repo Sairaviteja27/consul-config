@@ -1,0 +1,12 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: api-gateway-frontend
+  namespace: objs-fed
+spec:
+  destination:
+    name: frontend
+  sources:
+    - name: my-gateway
+      action: allow
+      

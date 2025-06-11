@@ -1,0 +1,12 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: allow-all-intentions
+  namespace: objs-fed
+spec:
+  destination:
+    name: "*"
+  sources:
+    - name: "*"
+      action: allow
+

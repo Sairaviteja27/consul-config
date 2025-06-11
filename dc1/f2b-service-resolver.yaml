@@ -1,0 +1,11 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceResolver
+metadata:
+  name: service-resolver
+  namespace: objs-fed
+spec:
+  connectTimeout: 15s
+  failover:
+    v2:
+      targets:
+      - datacenter: "dc3"

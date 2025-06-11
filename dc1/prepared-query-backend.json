@@ -1,0 +1,15 @@
+{
+"Name": "backend",
+  "Service": {
+    "Service": "backend",
+    "OnlyPassing": true,
+    "Failover": {
+    "NearestN": 1,
+    "Datacenters": ["dc3"]
+  }
+  },
+  "DNS": {
+    "TTL": "10s"
+  }
+}
+

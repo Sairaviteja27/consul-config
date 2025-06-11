@@ -1,0 +1,144 @@
+
+global:
+  name: consul
+  datacenter: dc2
+
+  # Configures metrics for Consul service mesh
+  metrics:
+    # Configures the Helm chart’s components
+    # to expose Prometheus metrics for the Consul service mesh. By default
+    # this includes gateway metrics and sidecar metrics.
+    # @type: boolean
+    enabled: true
+
+    # Configures consul agent metrics. Only applicable if
+    # `global.metrics.enabled` is true.
+    # @type: boolean
+    enableAgentMetrics: true
+
+    # Configures the retention time for metrics in Consul clients and
+    # servers. This must be greater than 0 for Consul clients and servers
+    # to expose any metrics at all.
+    # Only applicable if `global.metrics.enabled` is true.
+    # @type: string
+    agentMetricsRetentionTime: 1m
+
+    # If true, mesh, terminating, and ingress gateways will expose their
+    # Envoy metrics on port `20200` at the `/metrics` path and all gateway pods
+    # will have Prometheus scrape annotations. Only applicable if `global.metrics.enabled` is true.
+    # @type: boolean
+    enableGatewayMetrics: true
+
+  # TLS configures whether Consul components use TLS.
+  tls:
+    # TLS must be enabled for federation in Kubernetes.
+    enabled: true
+
+    # Here we're using the shared certificate authority from the primary
+    # datacenter that was exported via the federation secret.
+    caCert:
+      secretName: consul-federation
+      secretKey: caCert
+    caKey:
+      secretName: consul-federation
+      secretKey: caKey
+
+  federation:
+    enabled: true
+    k8sAuthMethodHost: https://c2-control-plane:6443
+    primaryDatacenter: dc1
+  # acls:
+  #  manageSystemACLs: true
+
+    # Here we're importing the replication token that was
+    # exported from the primary via the federation secret.
+   # replicationToken:
+    #  secretName: consul-federation
+    #  secretKey: replicationToken
+
+  # gossipEncryption:
+   # secretName: consul-federation
+   # secretKey: gossipEncryptionKey
+
+controller:
+ enabled: true
+
+server:
+  enabled: true
+  replicas: 1
+  bootstrapExpect: 1
+  nodeSelector: |
+    kubernetes.io/hostname: c2-worker
+  
+  # Here we're including the server config exported from the primary
+  # via the federation secret. This config includes the addresses of
+  # the primary datacenter's mesh gateways so Consul can begin federation.
+  extraVolumes:
+    - type: secret
+      name: consul-federation
+      items:
+        - key: serverConfigJSON
+          path: config.json
+      load: true
+
+client:
+  enabled: true
+  replicas: 1
+  nodeSelector: |
+    kubernetes.io/hostname: c2-worker2
+
+# Install Prometheus, a metrics database.
+prometheus:
+ enabled: true
+
+connectInject:
+  # Consul Connect service mesh must be enabled for federation.
+  enabled: true
+
+meshGateway:
+  # Mesh gateways are gateways between datacenters. They must be enabled
+  # for federation in Kubernetes since the communication between datacenters
+  # goes through the mesh gateways.
+  enabled: true
+  replicas: 1
+  # The service option configures the Service that fronts the Gateway Deployment.
+  service:
+    # Whether to create a Service or not.
+    enabled: true
+
+    # Type of service, ex. LoadBalancer, ClusterIP.
+    type: NodePort
+
+    # Port that the service will be exposed on.
+    # The targetPort will be set to meshGateway.containerPort.
+    port: 443
+    nodePort: 30081
+
+
+# Values that configure the Consul UI.
+ui:
+  # If true, the UI will be enabled. This will
+  # only _enable_ the UI, it doesn't automatically register any service for external
+  # access. The UI will only be enabled on server agents. If `server.enabled` is
+  # false, then this setting has no effect. To expose the UI in some way, you must
+  # configure `ui.service`.
+  # @default: global.enabled
+  # @type: boolean
+  enabled: true
+
+  # Configure the service for the Consul UI.
+  service:
+    # This will enable/disable registering a
+    # Kubernetes Service for the Consul UI. This value only takes effect if `ui.enabled` is
+    # true and taking effect.
+    enabled: true
+
+    # The service type to register.
+    # @type: string
+    type: NodePort
+
+    nodePort:
+
+      # HTTP node port
+      # @type: integer
+      http: 32728

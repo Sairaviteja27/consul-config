@@ -1,0 +1,8 @@
+{
+  "primary_datacenter": "dc1",
+  "primary_gateways": ["192.168.10.210:30082"],
+  "connect": {
+    "enable_mesh_gateway_wan_federation": true
+  }
+}
+

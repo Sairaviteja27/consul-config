@@ -1,0 +1,25 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceResolver
+metadata:
+  name: backend
+  namespace: objs-fed
+spec:
+  defaultSubset: dc1
+  subsets:
+    dc1:
+      onlyPassing: true
+      filter: 'Service.Meta.version == dc1'
+    dc3:
+      onlyPassing: true
+      filter: 'Service.Meta.version == dc3'
+  failover:
+    service: backend
+    namespace: objs-fed
+    'dc1': 
+      targets:
+        - datacenter: 'dc3'
+          service: backend
+    '*':    
+      targets:
+        - datacenter: 'dc3'
+          service: backend
