@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Service
+metadata:
+  # This name will be the service name in Consul.
+  name: backend
+  namespace: objs-fed
+  annotations:
+    consul.hashicorp.com/service-sync: "true"
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 7000
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend
+  namespace: objs-fed
+  
+---
+
+
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: backend
+spec:
+  protocol: http
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: objs-fed
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+        consul.hashicorp.com/service-meta-version: "dc3"
+    spec:
+      serviceAccountName: backend
+      containers:
+        - name: backend
+          image: raviteja2711/birdwatcher:1.0.1
+          env:
+            - name: BIND_ADDR
+              value: "0.0.0.0:7000"
+          ports:
+            - containerPort: 7000
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 7000
+            initialDelaySeconds: 5
+            periodSeconds: 10
