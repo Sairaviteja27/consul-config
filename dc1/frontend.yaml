@@ -59,12 +59,14 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/consul-up/birdwatcher-frontend:1.0.0
+          image: raviteja2711/birdwatcher-frontend:1.0.2
           env:
             - name: BIND_ADDR
               value: "0.0.0.0:6060"
             - name: BACKEND_URL
               value: "http://backend"
+            - name: TRACING_URL
+              value: "http://jaeger-collector.observability:9411"
           ports:
             - containerPort: 6060
       serviceAccountName: frontend

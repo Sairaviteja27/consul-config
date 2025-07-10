@@ -61,50 +61,19 @@ spec:
       serviceAccountName: backend
       containers:
         - name: backend
-          image: raviteja2711/birdwatcher:1.0.1
+          image: raviteja2711/birdwatcher:1.0.4
           env:
             - name: BIND_ADDR
               value: "0.0.0.0:7000"
+            - name: TRACING_URL
+              value: "http://jaeger-collector.observability:9411"
           ports:
             - containerPort: 7000
           readinessProbe:
             httpGet:
-              path: /health
-              port: 8081
+              path: /healthz
+              port: 7000
             initialDelaySeconds: 5
             periodSeconds: 10
 
-        - name: health-controller
-          image: python:3.9
-          ports:
-            - containerPort: 8081
-          command: ["python3", "-u", "-c"]
-          args:
-            - |
-              from http.server import BaseHTTPRequestHandler, HTTPServer
-              import threading
-
-              status = {"healthy": True}
-
-              class Handler(BaseHTTPRequestHandler):
-                  def do_GET(self):
-                      if self.path == "/health":
-                          self.send_response(200 if status["healthy"] else 500)
-                          self.end_headers()
-                          self.wfile.write(b"OK" if status["healthy"] else b"Not Ready")
-                      elif self.path == "/fail":
-                          status["healthy"] = False
-                          self.send_response(200)
-                          self.end_headers()
-                          self.wfile.write(b"Marked unhealthy")
-                      elif self.path == "/ok":
-                          status["healthy"] = True
-                          self.send_response(200)
-                          self.end_headers()
-                          self.wfile.write(b"Marked healthy")
-                      else:
-                          self.send_response(404)
-                          self.end_headers()
-
-              HTTPServer(("0.0.0.0", 8081), Handler).serve_forever()
 
