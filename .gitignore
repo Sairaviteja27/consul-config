@@ -1,2 +1,4 @@
 dc1/consul/
 dc1/new/
+*.zip
+**/*.zip
