@@ -1,0 +1,15 @@
+kind: Cluster
+name: c3
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30082
+        hostPort: 30082
+        listenAddress: "0.0.0.0"  # exposes it on all interfaces of the VM
+  - role: worker
+  - role: worker
+networking:
+  podSubnet: 10.242.0.0/16
+  serviceSubnet: 10.112.0.0/16
+  disableDefaultCNI: true
