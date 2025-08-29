@@ -1,0 +1,33 @@
+# jaeger-tgw.yaml
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: jaeger-collector
+  namespace: default   # <-- IMPORTANT: default Consul ns
+spec:
+  protocol: http
+  destination:
+    addresses: ["jaeger-collector.observability.svc.cluster.local"]
+    port: 9411
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: jaeger-collector
+  namespace: default   # <-- IMPORTANT: default Consul ns
+spec:
+  destination:
+    name: jaeger-collector
+  sources:
+    - name: "*"
+      action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: TerminatingGateway
+metadata:
+  name: terminating-gateway
+  namespace: consul
+spec:
+  services:
+    - name: jaeger-collector      # <-- no namespace here
+

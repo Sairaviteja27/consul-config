@@ -1,0 +1,37 @@
+# jaeger-tg.yaml
+# Expose dc1 Jaeger (Zipkin HTTP 9411) to the mesh via a Terminating Gateway
+
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: jaeger-collector
+  namespace: observability
+spec:
+  protocol: http
+  # Point the mesh "jaeger-collector" service at the in-cluster K8s Service
+  destination:
+    addresses:
+      - "jaeger-collector.observability.svc.cluster.local"
+    port: 9411
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: jaeger-collector
+  namespace: observability
+spec:
+  destination:
+    name: jaeger-collector
+  sources:
+    - name: "*"
+      action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: TerminatingGateway
+metadata:
+  name: terminating-gateway
+  namespace: consul
+spec:
+  services:
+    - name: jaeger-collector    # <-- removed "namespace" here; namespaces feature not enabled
+

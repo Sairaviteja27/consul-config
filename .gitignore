@@ -1,4 +1,5 @@
 dc1/consul/
+dc1/calico-bkup-c1
 dc1/new/
 *.zip
 **/*.zip

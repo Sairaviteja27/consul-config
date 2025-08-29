@@ -1,0 +1,23 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"consul.hashicorp.com/v1alpha1","kind":"ServiceDefaults","metadata":{"annotations":{},"name":"frontend","namespace":"default"},"spec":{"protocol":"http"}}
+  creationTimestamp: "2025-06-03T10:32:40Z"
+  finalizers:
+  - finalizers.consul.hashicorp.com
+  generation: 1
+  name: frontend
+  namespace: default
+  resourceVersion: "5624144"
+  uid: b7d9b8ee-fd81-4309-b422-7500bb88af97
+spec:
+  protocol: http
+status:
+  conditions:
+  - lastTransitionTime: "2025-07-11T11:20:19Z"
+    status: "True"
+    type: Synced
+  lastSyncedTime: "2025-07-11T11:20:19Z"
+

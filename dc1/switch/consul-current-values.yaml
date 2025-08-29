@@ -1,0 +1,695 @@
+COMPUTED VALUES:
+client:
+  affinity: null
+  annotations: null
+  containerSecurityContext:
+    aclInit: null
+    client: null
+    tlsInit: null
+  dataDirectoryHostPath: null
+  dnsPolicy: null
+  enabled: true
+  exposeGossipPorts: false
+  extraConfig: |
+    {}
+  extraContainers: []
+  extraEnvironmentVars: {}
+  extraLabels: null
+  extraVolumes: []
+  grpc: true
+  hostNetwork: false
+  image: null
+  join: null
+  logLevel: ""
+  nodeMeta:
+    host-ip: ${HOST_IP}
+    pod-name: ${HOSTNAME}
+  nodeSelector: |
+    kubernetes.io/hostname: c1-worker2
+  priorityClassName: ""
+  replicas: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 100
+  serviceAccount:
+    annotations: null
+  tolerations: ""
+  updateStrategy: null
+connectInject:
+  aclBindingRuleSelector: serviceaccount.name!=default
+  aclInjectToken:
+    secretKey: null
+    secretName: null
+  affinity: null
+  annotations: null
+  apiGateway:
+    enabled: true
+    manageExternalCRDs: true
+    manageNonStandardCRDs: true
+    managedGatewayClass:
+      copyAnnotations:
+        service: null
+      deployment:
+        defaultInstances: 1
+        maxInstances: 1
+        minInstances: 1
+      mapPrivilegedContainerPorts: 0
+      metrics:
+        enabled: true
+        path: null
+        port: null
+      nodeSelector: null
+      openshiftSCCName: restricted-v2
+      resourceJob:
+        resources:
+          limits:
+            cpu: 50m
+            memory: 50Mi
+          requests:
+            cpu: 50m
+            memory: 50Mi
+      resources:
+        limits:
+          cpu: 100m
+          memory: 100Mi
+        requests:
+          cpu: 100m
+          memory: 100Mi
+      serviceType: NodePort
+      tolerations: null
+    serviceAccount:
+      annotations: null
+    sidecarProxy:
+      defaultStartupFailureSeconds: 60
+  cni:
+    cniBinDir: /opt/cni/bin
+    cniNetDir: /etc/cni/net.d
+    enabled: false
+    logLevel: null
+    multus: false
+    namespace: null
+    resourceQuota:
+      pods: 5000
+    resources:
+      limits:
+        cpu: 100m
+        memory: 100Mi
+      requests:
+        cpu: 75m
+        memory: 75Mi
+    securityContext:
+      runAsGroup: 0
+      runAsNonRoot: false
+      runAsUser: 0
+    updateStrategy: null
+  consulNamespaces:
+    consulDestinationNamespace: default
+    mirroringK8S: true
+    mirroringK8SPrefix: ""
+  consulNode:
+    meta: null
+  default: false
+  disruptionBudget:
+    enabled: true
+    maxUnavailable: null
+    minAvailable: null
+  enabled: true
+  envoyExtraArgs: null
+  extraLabels: null
+  failurePolicy: Fail
+  image: null
+  imageConsul: null
+  initContainer:
+    resources:
+      limits:
+        cpu: null
+        memory: 150Mi
+      requests:
+        cpu: 50m
+        memory: 25Mi
+  k8sAllowNamespaces:
+  - '*'
+  k8sDenyNamespaces: []
+  logLevel: ""
+  metrics:
+    defaultEnableMerging: false
+    defaultEnabled: '-'
+    defaultMergedMetricsPort: 20100
+    defaultPrometheusScrapePath: /metrics
+    defaultPrometheusScrapePort: 20200
+  namespaceSelector: |
+    matchExpressions:
+      - key: "kubernetes.io/metadata.name"
+        operator: "NotIn"
+        values: ["kube-system","local-path-storage","openebs","gmp-system","gke-managed-cim"]
+  nodeSelector: null
+  overrideAuthMethodName: ""
+  priorityClassName: ""
+  replicas: 1
+  resources:
+    limits:
+      cpu: 50m
+      memory: 200Mi
+    requests:
+      cpu: 50m
+      memory: 200Mi
+  serviceAccount:
+    annotations: null
+  sidecarProxy:
+    concurrency: 2
+    defaultLivenessFailureSeconds: 0
+    defaultStartupFailureSeconds: 0
+    lifecycle:
+      defaultEnableShutdownDrainListeners: true
+      defaultEnabled: true
+      defaultGracefulPort: 20600
+      defaultGracefulShutdownPath: /graceful_shutdown
+      defaultGracefulStartupPath: /graceful_startup
+      defaultShutdownGracePeriodSeconds: 30
+      defaultStartupGracePeriodSeconds: 0
+    resources:
+      limits:
+        cpu: null
+        memory: null
+      requests:
+        cpu: null
+        memory: null
+  tolerations: null
+  transparentProxy:
+    defaultEnabled: true
+    defaultOverwriteProbes: true
+controller:
+  enabled: true
+dns:
+  additionalSpec: null
+  annotations: null
+  clusterIP: null
+  enableRedirection: '-'
+  enabled: '-'
+  proxy:
+    aclToken:
+      secretKey: null
+      secretName: null
+    enabled: false
+    port: 53
+    replicas: 1
+  type: ClusterIP
+externalServers:
+  enabled: false
+  grpcPort: 8502
+  hosts: []
+  httpsPort: 8501
+  k8sAuthMethodHost: null
+  skipServerWatch: false
+  tlsServerName: null
+  useSystemRoots: false
+global:
+  acls:
+    annotations: null
+    bootstrapToken:
+      secretKey: null
+      secretName: null
+    createReplicationToken: false
+    logLevel: ""
+    manageSystemACLs: false
+    nodeSelector: null
+    partitionToken:
+      secretKey: null
+      secretName: null
+    replicationToken:
+      secretKey: null
+      secretName: null
+    resources:
+      limits:
+        cpu: 50m
+        memory: 50Mi
+      requests:
+        cpu: 50m
+        memory: 50Mi
+    tolerations: ""
+  adminPartitions:
+    enabled: false
+    name: default
+  argocd:
+    enabled: false
+  cloud:
+    apiHost:
+      secretKey: null
+      secretName: null
+    authUrl:
+      secretKey: null
+      secretName: null
+    clientId:
+      secretKey: null
+      secretName: null
+    clientSecret:
+      secretKey: null
+      secretName: null
+    enabled: false
+    resourceId:
+      secretKey: null
+      secretName: null
+    scadaAddress:
+      secretKey: null
+      secretName: null
+  connect:
+    enableMeshGatewayWANFederation: true
+    enabled: true
+  consulAPITimeout: 5s
+  datacenter: dc1
+  domain: consul
+  enableConsulNamespaces: false
+  enablePodSecurityPolicies: false
+  enabled: true
+  enterpriseLicense:
+    enableLicenseAutoload: true
+    secretKey: null
+    secretName: null
+  experiments: []
+  extraLabels: {}
+  federation:
+    createFederationSecret: true
+    enabled: true
+    k8sAuthMethodHost: null
+    logLevel: ""
+    primaryDatacenter: null
+    primaryGateways: []
+  gossipEncryption:
+    autoGenerate: false
+    logLevel: ""
+    secretKey: ""
+    secretName: ""
+  image: hashicorp/consul:1.20.2
+  imageConsulDataplane: hashicorp/consul-dataplane:1.6.2
+  imageK8S: hashicorp/consul-k8s-control-plane:1.6.2
+  imagePullPolicy: ""
+  imagePullSecrets: []
+  logJSON: false
+  logLevel: info
+  loglevel: debug
+  metrics:
+    agentMetricsRetentionTime: 1m
+    datadog:
+      dogstatsd:
+        dogstatsdAddr: /var/run/datadog/dsd.socket
+        dogstatsdPort: 0
+        dogstatsdTags:
+        - source:consul
+        - consul_service:consul-server
+        enabled: false
+        socketTransportType: UDS
+      enabled: false
+      namespace: default
+      openMetricsPrometheus:
+        enabled: false
+      otlp:
+        enabled: false
+        protocol: http
+    disableAgentHostName: false
+    enableAgentMetrics: true
+    enableGatewayMetrics: true
+    enableHostMetrics: false
+    enableTelemetryCollector: false
+    enabled: true
+    prefixFilter:
+      allowList: []
+      blockList: []
+  name: consul
+  openshift:
+    enabled: false
+  peering:
+    enabled: false
+  recursors: []
+  secretsBackend:
+    vault:
+      adminPartitionsRole: ""
+      agentAnnotations: null
+      ca:
+        secretKey: ""
+        secretName: ""
+      connectCA:
+        additionalConfig: |
+          {}
+        address: ""
+        authMethodPath: kubernetes
+        intermediatePKIPath: ""
+        rootPKIPath: ""
+      connectInject:
+        caCert:
+          secretName: null
+        tlsCert:
+          secretName: null
+      connectInjectRole: ""
+      consulCARole: ""
+      consulClientRole: ""
+      consulServerRole: ""
+      enabled: false
+      manageSystemACLsRole: ""
+      vaultNamespace: ""
+  tls:
+    annotations: null
+    caCert:
+      secretKey: null
+      secretName: null
+    caKey:
+      secretKey: null
+      secretName: null
+    enableAutoEncrypt: false
+    enabled: true
+    httpsOnly: true
+    logLevel: ""
+    serverAdditionalDNSSANs: []
+    serverAdditionalIPSANs: []
+    verify: true
+  trustedCAs: []
+ingressGateways:
+  defaults:
+    affinity: null
+    annotations: null
+    consulNamespace: default
+    nodeSelector: null
+    priorityClassName: ""
+    replicas: 1
+    resources:
+      limits:
+        cpu: 100m
+        memory: 100Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    service:
+      additionalSpec: null
+      annotations: null
+      ports:
+      - nodePort: null
+        port: 8080
+      - nodePort: null
+        port: 8443
+      type: ClusterIP
+    serviceAccount:
+      annotations: null
+    terminationGracePeriodSeconds: 10
+    tolerations: null
+    topologySpreadConstraints: ""
+  enabled: false
+  gateways:
+  - name: ingress-gateway
+  logLevel: ""
+meshGateway:
+  affinity: null
+  annotations: null
+  consulServiceName: mesh-gateway
+  containerPort: 8443
+  dnsPolicy: null
+  enabled: true
+  hostNetwork: false
+  hostPort: null
+  initServiceInitContainer:
+    resources:
+      limits:
+        cpu: 50m
+        memory: 50Mi
+      requests:
+        cpu: 50m
+        memory: 50Mi
+  logLevel: ""
+  nodeSelector: |
+    kubernetes.io/hostname: c1-worker
+  priorityClassName: ""
+  replicas: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  service:
+    additionalSpec: null
+    annotations: null
+    enabled: true
+    nodePort: 30080
+    port: 443
+    type: NodePort
+  serviceAccount:
+    annotations: null
+  tolerations: null
+  topologySpreadConstraints: ""
+  wanAddress:
+    port: 30080
+    source: Static
+    static: 192.168.10.209
+prometheus:
+  enabled: true
+server:
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: "{{ .Release.Name }}"
+              component: server
+          topologyKey: kubernetes.io/hostname
+  annotations: null
+  auditLogs:
+    enabled: false
+    sinks: []
+  bootstrapExpect: 1
+  connect: true
+  containerSecurityContext:
+    aclInit: null
+    server: null
+    tlsInit: null
+  disruptionBudget:
+    enabled: true
+    maxUnavailable: null
+  enableAgentDebug: false
+  enabled: true
+  exposeGossipAndRPCPorts: false
+  exposeService:
+    annotations: null
+    enabled: true
+    nodePort:
+      grpc: null
+      http: null
+      https: null
+      rpc: null
+      serf: 31302
+    type: NodePort
+  extraConfig: |
+    {
+      "advertise_addr_wan": "192.168.10.209"
+    }
+  extraContainers: []
+  extraEnvironmentVars: {}
+  extraLabels: null
+  extraVolumes: []
+  image: null
+  limits:
+    requestLimits:
+      mode: disabled
+      readRate: -1
+      writeRate: -1
+  logLevel: ""
+  nodeSelector: |
+    kubernetes.io/hostname: c1-worker
+  persistentVolumeClaimRetentionPolicy: null
+  ports:
+    serflan:
+      port: 8301
+  priorityClassName: ""
+  replicas: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 100
+  serverCert:
+    secretName: null
+  service:
+    annotations: null
+  serviceAccount:
+    annotations: null
+  snapshotAgent:
+    caCert: null
+    configSecret:
+      secretKey: null
+      secretName: null
+    enabled: false
+    interval: 1h
+    resources:
+      limits:
+        cpu: 50m
+        memory: 50Mi
+      requests:
+        cpu: 50m
+        memory: 50Mi
+  storage: 10Gi
+  storageClass: null
+  tolerations: ""
+  topologySpreadConstraints: ""
+  updatePartition: 0
+syncCatalog:
+  aclSyncToken:
+    secretKey: null
+    secretName: null
+  addK8SNamespaceSuffix: true
+  affinity: null
+  annotations: null
+  cleanupNodeOnRemoval: false
+  consulNamespaces:
+    consulDestinationNamespace: default
+    mirroringK8S: true
+    mirroringK8SPrefix: ""
+  consulNodeName: k8s-sync
+  consulPrefix: null
+  consulWriteInterval: null
+  default: true
+  enabled: false
+  extraLabels: null
+  image: null
+  ingress:
+    enabled: false
+    loadBalancerIPs: false
+  k8sAllowNamespaces:
+  - '*'
+  k8sDenyNamespaces:
+  - kube-system
+  - kube-public
+  k8sPrefix: null
+  k8sSourceNamespace: null
+  k8sTag: null
+  logLevel: ""
+  metrics:
+    enabled: false
+    path: null
+    port: null
+  nodePortSyncType: ExternalFirst
+  nodeSelector: null
+  priorityClassName: ""
+  resources:
+    limits:
+      cpu: 50m
+      memory: 50Mi
+    requests:
+      cpu: 50m
+      memory: 50Mi
+  serviceAccount:
+    annotations: null
+  syncClusterIPServices: true
+  syncLoadBalancerEndpoints: false
+  toConsul: true
+  toK8S: true
+  tolerations: null
+telemetryCollector:
+  cloud:
+    clientId:
+      secretKey: null
+      secretName: null
+    clientSecret:
+      secretKey: null
+      secretName: null
+    resourceId:
+      secretKey: null
+      secretName: null
+  customExporterConfig: null
+  enabled: false
+  extraEnvironmentVars: {}
+  image: hashicorp/consul-telemetry-collector:0.0.2
+  initContainer:
+    resources: {}
+  logLevel: ""
+  nodeSelector: null
+  priorityClassName: ""
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 1000m
+      memory: 512Mi
+  service:
+    annotations: null
+  serviceAccount:
+    annotations: null
+terminatingGateways:
+  defaults:
+    affinity: null
+    annotations: null
+    consulNamespace: default
+    extraVolumes: []
+    nodeSelector: null
+    priorityClassName: ""
+    replicas: 1
+    resources:
+      limits:
+        cpu: 100m
+        memory: 100Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    serviceAccount:
+      annotations: null
+    tolerations: null
+    topologySpreadConstraints: ""
+  enabled: true
+  gateways:
+  - name: terminating-gateway
+    replicas: 1
+  logLevel: ""
+tests:
+  enabled: true
+ui:
+  dashboardURLTemplates:
+    service: ""
+  enabled: true
+  ingress:
+    annotations: null
+    enabled: false
+    hosts: []
+    ingressClassName: ""
+    pathType: Prefix
+    tls: []
+  metrics:
+    baseURL: http://prometheus-server
+    enabled: '-'
+    provider: prometheus
+  service:
+    additionalSpec: null
+    annotations: null
+    enabled: true
+    nodePort:
+      http: 32727
+      https: 32728
+    port:
+      http: 80
+      https: 443
+    type: NodePort
+webhookCertManager:
+  nodeSelector: null
+  resources:
+    limits:
+      cpu: 100m
+      memory: 50Mi
+    requests:
+      cpu: 100m
+      memory: 50Mi
+  tolerations: null

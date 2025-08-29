@@ -1,0 +1,18 @@
+# service-defaults-frontend.yaml  (update existing ServiceDefaults for your frontend)
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: frontend
+  namespace: default
+spec:
+  protocol: http
+  upstreamConfig:
+    overrides:
+      - name: backend
+        passiveHealthCheck:
+          interval: "1s"
+          maxFailures: 5                 # eject after 5 failures
+          enforcingConsecutive5xx: 100
+          baseEjectionTime: "30s"
+          maxEjectionPercent: 100
+

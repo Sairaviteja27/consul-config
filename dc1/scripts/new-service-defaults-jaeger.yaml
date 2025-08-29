@@ -1,0 +1,34 @@
+# jeger-upstream.yaml
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: jaeger-collector
+  namespace: observability
+spec:
+  protocol: http
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: backend
+  namespace: objs-fed
+spec:
+  protocol: http
+  upstreams:
+    - destinationName: jaeger-collector
+      namespace: observability
+      # Envoy will listen on this local port and forward to jaeger-collector
+      localBindPort: 9411
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: jaeger-collector
+  namespace: observability
+spec:
+  destination:
+    name: jaeger-collector
+  sources:
+    - name: "*"
+      action: allow
+

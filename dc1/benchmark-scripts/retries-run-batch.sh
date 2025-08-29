@@ -1,5 +1,5 @@
 SLEEP_TIME=0
-BATCH_TOTAL=100
+BATCH_TOTAL=50
 
 SUMMARY_FILE="retries_summary.csv"
 BENCHMARK_SCRIPT="./benchmark_retries.sh"  

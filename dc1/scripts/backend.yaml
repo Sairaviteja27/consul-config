@@ -57,6 +57,7 @@ spec:
         prometheus.io/port: "9090"
         prometheus.io/path: "/metrics"
         consul.hashicorp.com/service-meta-version: "dc1"
+        consul.hashicorp.com/connect-service-upstreams: "jaeger-collector.observability:9411"
     spec:
       serviceAccountName: backend
       containers:
@@ -66,7 +67,7 @@ spec:
             - name: BIND_ADDR
               value: "0.0.0.0:7000"
             - name: TRACING_URL
-              value: "http://jaeger-collector.observability:9411"
+              value: "http://127.0.0.1:9411"
           ports:
             - containerPort: 7000
           readinessProbe:

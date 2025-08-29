@@ -1,0 +1,14 @@
+# retries-service-router.yaml
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceRouter
+metadata:
+  name: backend
+  namespace: objs-fed
+spec:
+  routes:
+    - destination:
+        requestTimeout: 15s
+        numRetries: 10
+        retryOn: ["5xx"]
+        retryOnConnectFailure: true
+

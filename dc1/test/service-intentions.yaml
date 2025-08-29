@@ -1,0 +1,13 @@
+# INTENTIONS: allow frontend -> backend (apply in dc1; also in dc3 if you call the dc3 target)
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: backend
+  namespace: objs-fed
+spec:
+  destination:
+    name: backend
+  sources:
+    - name: frontend
+      action: allow
+

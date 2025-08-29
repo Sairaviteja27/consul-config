@@ -1,0 +1,8 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: jaeger-collector
+  namespace: observability
+spec:
+  protocol: http
+

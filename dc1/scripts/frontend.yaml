@@ -52,6 +52,7 @@ spec:
       annotations:
         consul.hashicorp.com/connect-inject: "true"
         consul.hashicorp.com/service-name: "frontend"
+        consul.hashicorp.com/transparent-proxy: "true"   # <-- add this
         prometheus.io/scrape: "true"
         prometheus.io/port: "9090"
         prometheus.io/path: "/metrics"

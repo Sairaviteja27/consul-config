@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dbg
+  namespace: observability
+  annotations:
+    consul.hashicorp.com/connect-inject: "false"
+spec:
+  containers:
+  - name: curl
+    image: curlimages/curl:8.10.1
+    command: ["sh","-lc"]
+    args: ['curl -sS -o /dev/null -w "%{http_code}\n" http://jaeger-collector.observability.svc:9411/api/v2/spans; sleep 300']
+

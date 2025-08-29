@@ -1,0 +1,154 @@
+#!/bin/bash
+set -euo pipefail
+
+# ====== CONFIG (edit here) ======
+NAMESPACE="objs-fed"
+SERVICE_NAME="backend"                    # Consul service name
+TIMEOUT_S="1"                             # requestTimeout to apply via ServiceRouter (seconds)
+DELAY_S="0.5"                               # backend delay (?delay=3)
+RATE="60"                                 # RPS
+DURATION="60s"                            # Vegeta attack duration
+VEGETA_TARGET="http://172.18.0.2:31537/shuffle?error-rate=0&delay=${DELAY_S}"
+WORKDIR="timeouts_benchmark"              # outputs dir
+SLEEP_AFTER_APPLY=8                       # seconds to let Envoy pick up config
+# =================================
+
+mkdir -p "$WORKDIR"
+
+# ---- Write ServiceRouter manifest and apply ----
+ROUTER_FILE="${WORKDIR}/timeouts.yaml"
+cat > "$ROUTER_FILE" <<EOF
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceRouter
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+spec:
+  routes:
+  - destination:
+      requestTimeout: "${TIMEOUT_S}s"
+EOF
+
+echo "🛠️  Applying timeout (${TIMEOUT_S}s) via ServiceRouter to ${SERVICE_NAME} in ${NAMESPACE}..."
+kubectl apply -f "$ROUTER_FILE" >/dev/null
+echo "⏳ Waiting ${SLEEP_AFTER_APPLY}s for Envoy to receive new config..."
+sleep "${SLEEP_AFTER_APPLY}"
+
+# ---- Filenames for this run ----
+STAMP="$(date +%Y%m%d_%H%M%S)"
+BASE="timeout${TIMEOUT_S}s_delay${DELAY_S}s_r${RATE}_${STAMP}"
+BIN="${WORKDIR}/${BASE}.bin"
+JSON="${WORKDIR}/${BASE}.json"
+TEXT="${WORKDIR}/${BASE}_text.txt"
+HIST="${WORKDIR}/${BASE}_hist.txt"
+CSV="${WORKDIR}/timeout_runs_summary.csv"
+
+# ---- Run Vegeta ----
+echo "🚀 Vegeta attack ${RATE} rps for ${DURATION} → ${VEGETA_TARGET}"
+echo "GET ${VEGETA_TARGET}" | vegeta attack -rate="${RATE}" -duration="${DURATION}" | tee "${BIN}" >/dev/null
+vegeta encode < "${BIN}" > "${JSON}"
+vegeta report -type=text < "${BIN}" > "${TEXT}"
+vegeta report -type='hist[0,5ms,10ms,25ms,50ms,100ms,250ms,500ms,1s,2s,5s]' < "${BIN}" > "${HIST}"
+echo "📄 Saved: ${TEXT} and ${HIST}"
+
+# ---- Helpers ----
+ns_to_ms () { awk -v ns="$1" 'BEGIN{printf "%.3f", ns/1000000.0}'; }
+
+# Percentile from newline-separated integer list (nanoseconds)
+percentile_ns () {
+  local p="$1"
+  awk -v p="${p}" '
+  { a[NR]=$1 }
+  END{
+    if (NR==0){print 0; exit}
+    n=asort(a)
+    idx=int((p/100.0)*n); if(idx<1) idx=1; if(idx>n) idx=n
+    print a[idx]
+  }'
+}
+
+# Extract lists
+ALL_LAT_NS=$(jq -r 'select(type=="object") | .latency' "${JSON}" || true)
+CODES=$(jq -r 'select(type=="object") | .code' "${JSON}" || true)
+ERRORS=$(jq -r 'select(type=="object") | (.error // "")' "${JSON}" || true)
+BYTES_IN=$(jq -r 'select(type=="object") | (.bytes_in // 0)' "${JSON}" || true)
+
+TOTAL_REQ=$(echo "${CODES}" | wc -l | awk '{print $1}')
+OK_LINES=$(paste <(echo "${CODES}") <(echo "${ALL_LAT_NS}") <(echo "${BYTES_IN}") | awk '$1=="200"{print $2}')
+FAIL_LINES=$(paste <(echo "${CODES}") <(echo "${ALL_LAT_NS}") <(echo "${BYTES_IN}") | awk '$1!="200"{print $2}')
+TIMEOUT_LINES=$(paste <(echo "${CODES}") <(echo "${ERRORS}") <(echo "${ALL_LAT_NS}") <(echo "${BYTES_IN}") \
+  | awk 'BEGIN{IGNORECASE=1} ($1=="504") || ($2 ~ /timeout/){print $3}')
+
+OK_BYTES=$(paste <(echo "${CODES}") <(echo "${BYTES_IN}") | awk '$1=="200"{print $2}')
+TIMEOUT_BYTES=$(paste <(echo "${CODES}") <(echo "${ERRORS}") <(echo "${BYTES_IN}") \
+  | awk 'BEGIN{IGNORECASE=1} ($1=="504") || ($2 ~ /timeout/){print $3}')
+
+SUCCESS_COUNT=$(echo "${CODES}" | awk '$1=="200"{c++} END{print c+0}')
+FAIL_COUNT=$(( TOTAL_REQ - SUCCESS_COUNT ))
+TIMEOUT_COUNT=$(echo "${TIMEOUT_LINES}" | wc -l | awk '{print $1}')
+ERR_RATE_PCT=$(awk -v f="${FAIL_COUNT}" -v t="${TOTAL_REQ}" 'BEGIN{ if(t==0) print 0; else printf "%.3f", (f/t)*100 }')
+TIMEOUT_HIT_RATE_PCT=$(awk -v f="${TIMEOUT_COUNT}" -v t="${TOTAL_REQ}" 'BEGIN{ if(t==0) print 0; else printf "%.3f", (f/t)*100 }')
+
+# Overall latency stats
+MEAN_NS=$(echo "${ALL_LAT_NS}" | awk '{s+=$1} END{ if(NR>0) print s/NR; else print 0 }')
+P95_NS=$(echo "${ALL_LAT_NS}" | percentile_ns 95)
+P99_NS=$(echo "${ALL_LAT_NS}" | percentile_ns 99)
+
+# 200-only tail latency
+MEAN200_NS=$(echo "${OK_LINES}" | awk '{s+=$1} END{ if(NR>0) print s/NR; else print 0 }')
+P95_200_NS=$(echo "${OK_LINES}" | percentile_ns 95)
+P99_200_NS=$(echo "${OK_LINES}" | percentile_ns 99)
+
+# Failures latency
+MEAN_FAIL_NS=$(echo "${FAIL_LINES}" | awk '{s+=$1} END{ if(NR>0) print s/NR; else print 0 }')
+P95_FAIL_NS=$(echo "${FAIL_LINES}" | percentile_ns 95)
+P99_FAIL_NS=$(echo "${FAIL_LINES}" | percentile_ns 99)
+
+# Timeout accuracy (difference from configured timeout)
+TIMEOUT_MS_CFG=$(awk -v s="${TIMEOUT_S}" 'BEGIN{printf "%.3f", s*1000.0}')
+ACC_DIFF_MS_LIST=$(echo "${TIMEOUT_LINES}" | awk -v tms="${TIMEOUT_MS_CFG}" '{printf "%.3f\n", ($1/1000000.0)-tms}')
+ACC_MEAN_MS=$(echo "${ACC_DIFF_MS_LIST}" | awk '{s+=$1} END{ if(NR>0) printf "%.3f", s/NR; else printf "0.000"}')
+# p95 of |diff|
+ACC_P95_ABS_MS=$(echo "${ACC_DIFF_MS_LIST}" | awk '{if($1<0)d=-$1; else d=$1; print d}' | sort -n | awk '
+  {a[NR]=$1} END{ if(NR==0){print "0.000"; exit} n=asort(a); idx=int(0.95*n); if(idx<1)idx=1; if(idx>n)idx=n; printf "%.3f", a[idx]}')
+
+# Bytes/Work saved on timeouts (compare avg bytes_in)
+BYTES_IN_MEAN_200=$(echo "${OK_BYTES}" | awk '{s+=$1} END{ if(NR>0) printf "%.3f", s/NR; else printf "0.000"}')
+BYTES_IN_MEAN_TIMEOUT=$(echo "${TIMEOUT_BYTES}" | awk '{s+=$1} END{ if(NR>0) printf "%.3f", s/NR; else printf "0.000"}')
+BYTES_SAVED_PER_TIMEOUT=$(awk -v a="${BYTES_IN_MEAN_200}" -v b="${BYTES_IN_MEAN_TIMEOUT}" 'BEGIN{d=a-b; if(d<0)d=0; printf "%.3f", d}')
+
+# Convert to ms for summary
+MEAN_MS=$(ns_to_ms "${MEAN_NS}")
+P95_MS=$(ns_to_ms "${P95_NS}")
+P99_MS=$(ns_to_ms "${P99_NS}")
+MEAN200_MS=$(ns_to_ms "${MEAN200_NS}")
+P95_200_MS=$(ns_to_ms "${P95_200_NS}")
+P99_200_MS=$(ns_to_ms "${P99_200_NS}")
+MEAN_FAIL_MS=$(ns_to_ms "${MEAN_FAIL_NS}")
+P95_FAIL_MS=$(ns_to_ms "${P95_FAIL_NS}")
+P99_FAIL_MS=$(ns_to_ms "${P99_FAIL_NS}")
+
+# ---- Console summary ----
+echo ""
+echo "================ TIMEOUT BENCHMARK ================"
+echo " Service       : ${SERVICE_NAME}/${NAMESPACE}"
+echo " Timeout       : ${TIMEOUT_S}s   Delay: ${DELAY_S}s   Rate: ${RATE} rps   Duration: ${DURATION}"
+echo " Total         : ${TOTAL_REQ}"
+echo " 200 / Fail    : ${SUCCESS_COUNT} / ${FAIL_COUNT}"
+echo " Error rate    : ${ERR_RATE_PCT}%"
+echo " Timeout hits  : ${TIMEOUT_COUNT}  (${TIMEOUT_HIT_RATE_PCT}%)"
+echo " Overall lat   : mean=${MEAN_MS} ms, p95=${P95_MS} ms, p99=${P99_MS} ms"
+echo " 200-only      : mean=${MEAN200_MS} ms, p95=${P95_200_MS} ms, p99=${P99_200_MS} ms"
+echo " Failures only : mean=${MEAN_FAIL_MS} ms, p95=${P95_FAIL_MS} ms, p99=${P99_FAIL_MS} ms"
+echo " Timeout acc   : mean diff=${ACC_MEAN_MS} ms, p95(|diff|)=${ACC_P95_ABS_MS} ms (vs ${TIMEOUT_MS_CFG} ms cfg)"
+echo " Bytes saved   : ~${BYTES_SAVED_PER_TIMEOUT} bytes per timeout (vs avg 200)"
+echo " Artifacts     : ${BIN}, ${JSON}, ${TEXT}, ${HIST}"
+echo "==================================================="
+
+# ---- CSV append ----
+if [[ ! -f "${CSV}" ]]; then
+  echo "Stamp,Service,Namespace,Timeout(s),Delay(s),Rate,Runs,Success,Failures,TimeoutHits,ErrorRate(%),TimeoutHitRate(%),Mean(ms),P95(ms),P99(ms),Mean200(ms),P95_200(ms),P99_200(ms),MeanFail(ms),P95_Fail(ms),P99_Fail(ms),AccMeanDiff(ms),AccP95Abs(ms),BytesInMean200,BytesInMeanTimeout,BytesSavedPerTimeout,JsonPath,TextReport" > "${CSV}"
+fi
+
+echo "${STAMP},${SERVICE_NAME},${NAMESPACE},${TIMEOUT_S},${DELAY_S},${RATE},${TOTAL_REQ},${SUCCESS_COUNT},${FAIL_COUNT},${TIMEOUT_COUNT},${ERR_RATE_PCT},${TIMEOUT_HIT_RATE_PCT},${MEAN_MS},${P95_MS},${P99_MS},${MEAN200_MS},${P95_200_MS},${P99_200_MS},${MEAN_FAIL_MS},${P95_FAIL_MS},${P99_FAIL_MS},${ACC_MEAN_MS},${ACC_P95_ABS_MS},${BYTES_IN_MEAN_200},${BYTES_IN_MEAN_TIMEOUT},${BYTES_SAVED_PER_TIMEOUT},${JSON},${TEXT}" >> "${CSV}"
+

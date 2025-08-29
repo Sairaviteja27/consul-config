@@ -1,0 +1,19 @@
+# service-resolver.yaml
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceResolver
+metadata:
+  name: backend
+  namespace: objs-fed
+spec:
+  connectTimeout: 15s
+  failover:
+    "*":
+      targets:
+        - datacenter: "dc3"
+  loadBalancer:
+    policy: maglev
+    hashPolicies:
+      - field: header
+        fieldValue: x-request-id
+        terminal: true
+

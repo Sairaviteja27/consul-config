@@ -11,7 +11,7 @@ mkdir -p batch-reports
 
 # Initialize CSV summary with header if not present
 if [[ ! -f "$SUMMARY_FILE" ]]; then
-  echo "Batch,SwitchTime,ErrorRate,MeanLatency(ms),P95(ms),P99(ms)" > "$SUMMARY_FILE"
+  echo "Batch,SwitchTime,ErrorRate,MeanLatency(ms),P95(ms),P99(ms),Status200,Status503,SuccessCount,ErrorCount,CalculatedErrorRate" > "$SUMMARY_FILE"
 fi
 
 echo "📊 Starting batch failover test ($BATCH_TOTAL runs)..."

@@ -1,0 +1,19 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: jaeger-collector
+  namespace: observability
+spec:
+  protocol: grpc
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: jaeger-collector
+  namespace: observability
+spec:
+  destination:
+    name: jaeger-collector
+  sources:
+    - name: "*"
+      action: allow

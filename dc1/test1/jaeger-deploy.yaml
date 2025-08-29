@@ -1,0 +1,177 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "5"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"deployment.kubernetes.io/revision":"3","linkerd.io/inject":"disabled","prometheus.io/port":"14269","prometheus.io/scrape":"true"},"creationTimestamp":"2025-07-01T09:33:35Z","generation":3,"labels":{"app":"jaeger","app.kubernetes.io/component":"all-in-one","app.kubernetes.io/instance":"jaeger","app.kubernetes.io/managed-by":"jaeger-operator","app.kubernetes.io/name":"jaeger","app.kubernetes.io/part-of":"jaeger"},"name":"jaeger","namespace":"observability","ownerReferences":[{"apiVersion":"jaegertracing.io/v1","controller":true,"kind":"Jaeger","name":"jaeger","uid":"f9fa3ad6-efc6-4006-822f-8514c0a0b06f"}],"resourceVersion":"11837426","uid":"dd3d9368-c548-4046-8414-f8a782fc532b"},"spec":{"progressDeadlineSeconds":600,"replicas":1,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app":"jaeger","app.kubernetes.io/component":"all-in-one","app.kubernetes.io/instance":"jaeger","app.kubernetes.io/managed-by":"jaeger-operator","app.kubernetes.io/name":"jaeger","app.kubernetes.io/part-of":"jaeger"}},"strategy":{"type":"Recreate"},"template":{"metadata":{"annotations":{"consul.hashicorp.com/connect-inject":"true","consul.hashicorp.com/service-name":"jaeger-collector","consul.hashicorp.com/service-port":"4317","linkerd.io/inject":"disabled","prometheus.io/port":"14269","prometheus.io/scrape":"true","sidecar.istio.io/inject":"false"},"creationTimestamp":null,"labels":{"app":"jaeger","app.kubernetes.io/component":"all-in-one","app.kubernetes.io/instance":"jaeger","app.kubernetes.io/managed-by":"jaeger-operator","app.kubernetes.io/name":"jaeger","app.kubernetes.io/part-of":"jaeger"}},"spec":{"containers":[{"args":["--sampling.strategies-file=/etc/jaeger/sampling/sampling.json"],"env":[{"name":"SPAN_STORAGE_TYPE","value":"memory"},{"name":"METRICS_STORAGE_TYPE"},{"name":"COLLECTOR_ZIPKIN_HOST_PORT","value":":9411"},{"name":"JAEGER_DISABLED","value":"false"},{"name":"COLLECTOR_OTLP_ENABLED","value":"true"}],"image":"jaegertracing/all-in-one:1.52.0","imagePullPolicy":"IfNotPresent","livenessProbe":{"failureThreshold":5,"httpGet":{"path":"/","port":14269,"scheme":"HTTP"},"initialDelaySeconds":5,"periodSeconds":15,"successThreshold":1,"timeoutSeconds":1},"name":"jaeger","ports":[{"containerPort":5775,"name":"zk-compact-trft","protocol":"UDP"},{"containerPort":5778,"name":"config-rest","protocol":"TCP"},{"containerPort":6831,"name":"jg-compact-trft","protocol":"UDP"},{"containerPort":6832,"name":"jg-binary-trft","protocol":"UDP"},{"containerPort":9411,"name":"zipkin","protocol":"TCP"},{"containerPort":14267,"name":"c-tchan-trft","protocol":"TCP"},{"containerPort":14268,"name":"c-binary-trft","protocol":"TCP"},{"containerPort":16685,"name":"grpc-query","protocol":"TCP"},{"containerPort":16686,"name":"query","protocol":"TCP"},{"containerPort":14269,"name":"admin-http","protocol":"TCP"},{"containerPort":14250,"name":"grpc","protocol":"TCP"},{"containerPort":4317,"name":"grpc-otlp","protocol":"TCP"},{"containerPort":4318,"name":"http-otlp","protocol":"TCP"}],"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/","port":14269,"scheme":"HTTP"},"initialDelaySeconds":1,"periodSeconds":10,"successThreshold":1,"timeoutSeconds":1},"resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File","volumeMounts":[{"mountPath":"/etc/jaeger/sampling","name":"jaeger-sampling-configuration-volume","readOnly":true}]}],"dnsPolicy":"ClusterFirst","enableServiceLinks":false,"restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"serviceAccount":"jaeger","serviceAccountName":"jaeger","terminationGracePeriodSeconds":30,"volumes":[{"configMap":{"defaultMode":420,"items":[{"key":"sampling","path":"sampling.json"}],"name":"jaeger-sampling-configuration"},"name":"jaeger-sampling-configuration-volume"}]}}},"status":{"availableReplicas":1,"conditions":[{"lastTransitionTime":"2025-08-09T21:32:19Z","lastUpdateTime":"2025-08-09T21:32:19Z","message":"Deployment has minimum availability.","reason":"MinimumReplicasAvailable","status":"True","type":"Available"},{"lastTransitionTime":"2025-08-09T21:31:54Z","lastUpdateTime":"2025-08-09T21:32:19Z","message":"ReplicaSet \"jaeger-68d57c459b\" has successfully progressed.","reason":"NewReplicaSetAvailable","status":"True","type":"Progressing"}],"observedGeneration":3,"readyReplicas":1,"replicas":1,"updatedReplicas":1}}
+    linkerd.io/inject: disabled
+    prometheus.io/port: "14269"
+    prometheus.io/scrape: "true"
+  creationTimestamp: "2025-07-01T09:33:35Z"
+  generation: 5
+  labels:
+    app: jaeger
+    app.kubernetes.io/component: all-in-one
+    app.kubernetes.io/instance: jaeger
+    app.kubernetes.io/managed-by: jaeger-operator
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/part-of: jaeger
+  name: jaeger
+  namespace: observability
+  ownerReferences:
+  - apiVersion: jaegertracing.io/v1
+    controller: true
+    kind: Jaeger
+    name: jaeger
+    uid: f9fa3ad6-efc6-4006-822f-8514c0a0b06f
+  resourceVersion: "11841330"
+  uid: dd3d9368-c548-4046-8414-f8a782fc532b
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: jaeger
+      app.kubernetes.io/component: all-in-one
+      app.kubernetes.io/instance: jaeger
+      app.kubernetes.io/managed-by: jaeger-operator
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/part-of: jaeger
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: disabled
+        prometheus.io/port: "14269"
+        prometheus.io/scrape: "true"
+        sidecar.istio.io/inject: "false"
+      creationTimestamp: null
+      labels:
+        app: jaeger
+        app.kubernetes.io/component: all-in-one
+        app.kubernetes.io/instance: jaeger
+        app.kubernetes.io/managed-by: jaeger-operator
+        app.kubernetes.io/name: jaeger
+        app.kubernetes.io/part-of: jaeger
+    spec:
+      containers:
+      - args:
+        - --sampling.strategies-file=/etc/jaeger/sampling/sampling.json
+        env:
+        - name: SPAN_STORAGE_TYPE
+          value: memory
+        - name: METRICS_STORAGE_TYPE
+        - name: COLLECTOR_ZIPKIN_HOST_PORT
+          value: :9411
+        - name: JAEGER_DISABLED
+          value: "false"
+        - name: COLLECTOR_OTLP_ENABLED
+          value: "true"
+        image: jaegertracing/all-in-one:1.52.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /
+            port: 14269
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 15
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: jaeger
+        ports:
+        - containerPort: 5775
+          name: zk-compact-trft
+          protocol: UDP
+        - containerPort: 5778
+          name: config-rest
+          protocol: TCP
+        - containerPort: 6831
+          name: jg-compact-trft
+          protocol: UDP
+        - containerPort: 6832
+          name: jg-binary-trft
+          protocol: UDP
+        - containerPort: 9411
+          name: zipkin
+          protocol: TCP
+        - containerPort: 14267
+          name: c-tchan-trft
+          protocol: TCP
+        - containerPort: 14268
+          name: c-binary-trft
+          protocol: TCP
+        - containerPort: 16685
+          name: grpc-query
+          protocol: TCP
+        - containerPort: 16686
+          name: query
+          protocol: TCP
+        - containerPort: 14269
+          name: admin-http
+          protocol: TCP
+        - containerPort: 14250
+          name: grpc
+          protocol: TCP
+        - containerPort: 4317
+          name: grpc-otlp
+          protocol: TCP
+        - containerPort: 4318
+          name: http-otlp
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 14269
+            scheme: HTTP
+          initialDelaySeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/jaeger/sampling
+          name: jaeger-sampling-configuration-volume
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: jaeger
+      serviceAccountName: jaeger
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: sampling
+            path: sampling.json
+          name: jaeger-sampling-configuration
+        name: jaeger-sampling-configuration-volume
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2025-08-09T21:31:54Z"
+    lastUpdateTime: "2025-08-09T21:40:36Z"
+    message: ReplicaSet "jaeger-7cb54cc7d8" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2025-08-10T13:04:57Z"
+    lastUpdateTime: "2025-08-10T13:04:57Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 5
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

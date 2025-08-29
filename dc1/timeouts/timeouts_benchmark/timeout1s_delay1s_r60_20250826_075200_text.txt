@@ -1,0 +1,9 @@
+Requests      [total, rate, throughput]         3600, 60.02, 29.54
+Duration      [total, attack, wait]             1m1s, 59.983s, 1.01s
+Latencies     [min, mean, 50, 90, 95, 99, max]  1.004s, 1.011s, 1.007s, 1.018s, 1.045s, 1.088s, 1.127s
+Bytes In      [total, mean]                     1777836, 493.84
+Bytes Out     [total, mean]                     0, 0.00
+Success       [ratio]                           50.06%
+Status Codes  [code:count]                      200:1802  504:1798  
+Error Set:
+504 Gateway Timeout
